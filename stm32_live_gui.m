@@ -1,7 +1,7 @@
 function stm32_live_gui
     clc;
 
-    port = "COM3";      
+    port = "COM4";      
     baud = 115200;
 
    
