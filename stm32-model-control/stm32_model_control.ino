@@ -19,8 +19,14 @@ EncoderAS5600 enc2(&I2C_2);
 Controller controller(&motor1, &motor2, &enc1, &enc2);
 
 // ===== TIMER =====
+// Sampling is driven by STM32 timer, not by MATLAB/PC time.
+// The timer interrupt increments a sample counter once per sampling period.
+constexpr float SAMPLE_RATE_HZ = 25.0f;
+constexpr float TS_SEC = 1.0f / SAMPLE_RATE_HZ;
+
 HardwareTimer *timer = new HardwareTimer(TIM2);
-volatile uint8_t sampleCounter = 0;
+volatile uint32_t pendingSamples = 0;
+volatile unsigned long sampleTick = 0;
 
 // ===== SERIAL =====
 char buffer[32];
@@ -55,7 +61,7 @@ void setup()
     motor2.arm();
 
     // TIMER
-    timer->setOverflow(25, HERTZ_FORMAT);
+    timer->setOverflow(SAMPLE_RATE_HZ, HERTZ_FORMAT);
     timer->attachInterrupt(onTimer);
     timer->resume();
 }
@@ -79,31 +85,41 @@ void loop()
         }
     }
 
-    // SAMPLING
-    while (sampleCounter > 0)
+    // SAMPLING + STREAMING
+    // One outgoing data line is produced only after a timer tick.
+    // Format: time_s,motor1_power,motor2_power,encoder1_deg,encoder2_deg
+    while (pendingSamples > 0)
     {
+        unsigned long tickSnapshot;
+
         noInterrupts();
-        sampleCounter--;
+        pendingSamples--;
+        tickSnapshot = sampleTick;
         interrupts();
 
         controller.update();
-    }
 
-    if (sendData)
-    {
-        Serial.print(motor1.getPower());
-        Serial.print(",");
-        Serial.print(motor2.getPower());
-        Serial.print(",");
-        Serial.print(controller.getAngle1(), 2);
-        Serial.print(",");
-        Serial.println(controller.getAngle2(), 2);
+        if (sendData)
+        {
+            float timeSec = tickSnapshot * TS_SEC;
+
+            Serial.print(timeSec, 4);
+            Serial.print(",");
+            Serial.print(motor1.getPower());
+            Serial.print(",");
+            Serial.print(motor2.getPower());
+            Serial.print(",");
+            Serial.print(controller.getAngle1(), 2);
+            Serial.print(",");
+            Serial.println(controller.getAngle2(), 2);
+        }
     }
 }
 
 void onTimer()
 {
-    sampleCounter++;
+    sampleTick++;
+    pendingSamples++;
 }
 
 void processCommand(const char* cmd)
