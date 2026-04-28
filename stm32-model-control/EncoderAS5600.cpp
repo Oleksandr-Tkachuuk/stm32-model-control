@@ -13,37 +13,13 @@ void EncoderAS5600::update()
 
   if (readRaw(raw))
   {
-    if (raw == prevRaw)
-      freezeCounter++;
-    else
-      freezeCounter = 0;
-
-    prevRaw = raw;
     lastRaw = raw;
-  }
-  else
-  {
-    freezeCounter++;
-  }
-
-  handleFreeze();
-}
-
-void EncoderAS5600::handleFreeze()
-{
-  if (freezeCounter > 10)
-  {
-    _wire->end();
-    delayMicroseconds(50);
-    _wire->begin();
-    _wire->setClock(50000);
-    freezeCounter = 0;
   }
 }
 
 float EncoderAS5600::getAngle()
 {
-  float angle = (lastRaw * 360.0f) / 4096.0f - offset;
+  float angle = AS5600_RAW_TO_DEGREES(lastRaw) - offset;
 
   while (angle > 180.0f) angle -= 360.0f;
   while (angle <= -180.0f) angle += 360.0f;
@@ -68,22 +44,20 @@ void EncoderAS5600::calibrateZero()
 
   if (validSamples > 0) {
     uint16_t avg = sum / validSamples;
-    offset = (avg * 360.0f) / 4096.0f;
+    offset = AS5600_RAW_TO_DEGREES(avg);
   }
 }
 
 bool EncoderAS5600::readRaw(uint16_t &rawOut)
 {
-  for (int i = 0; i < 3; i++)
-  {
-    encoder.readAngle();
-    uint16_t raw = encoder.rawAngle();
+  encoder.readAngle();
+  uint16_t raw = encoder.rawAngle();
 
-    if (encoder.lastError() == AS5600_OK)
-    {
-      rawOut = raw;
-      return true;
-    }
+  if (encoder.lastError() == AS5600_OK)
+  {
+    rawOut = raw;
+    return true;
   }
+
   return false;
 }

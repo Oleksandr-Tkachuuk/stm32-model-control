@@ -16,13 +16,8 @@ private:
   AS5600 encoder;
   TwoWire* _wire;
   uint16_t lastRaw = 0;
-  uint16_t prevRaw = 0;
 
   float offset = 0;
-
-  int freezeCounter = 0;
-
-  void handleFreeze();
 
   bool readRaw(uint16_t &rawOut);
 };
