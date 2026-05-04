@@ -19,7 +19,7 @@ void EncoderAS5600::update()
 
 float EncoderAS5600::getAngle()
 {
-  float angle = AS5600_RAW_TO_DEGREES(lastRaw) - offset;
+  float angle = lastRaw * AS5600_RAW_TO_DEGREES - offset;
 
   while (angle > 180.0f) angle -= 360.0f;
   while (angle <= -180.0f) angle += 360.0f;
@@ -44,7 +44,7 @@ void EncoderAS5600::calibrateZero()
 
   if (validSamples > 0) {
     uint16_t avg = sum / validSamples;
-    offset = AS5600_RAW_TO_DEGREES(avg);
+    offset = avg * AS5600_RAW_TO_DEGREES;
   }
 }
 

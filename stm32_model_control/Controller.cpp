@@ -130,3 +130,13 @@ float Controller::getAngle2()
 {
   return enc2->getAngle();
 }
+
+void Controller::setPowerMotor1(int p)
+{
+    motor1->setPower(constrain(p,0,100));
+}
+
+void Controller::setPowerMotor2(int p)
+{
+    motor2->setPower(constrain(p,0,100));
+}

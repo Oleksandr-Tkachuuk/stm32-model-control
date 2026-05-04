@@ -17,6 +17,9 @@ public:
 
     float getAngle1();
     float getAngle2();
+  
+    void setPowerMotor1(int p);
+    void setPowerMotor2(int p);
 
 private:
   MotorESC* motor1;

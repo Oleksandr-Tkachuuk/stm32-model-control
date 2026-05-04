@@ -135,6 +135,16 @@ void processCommand(const char* cmd)
     else if (c == 'x') controller.startAutoTest();
     else if (c == 'z') controller.startRhythm();
     else if (c == 'c') controller.calibrateEncoders();
+    else if (strncmp(cmd, "m1:", 3) == 0)
+    {
+        int val = atoi(cmd + 3);
+        controller.setPowerMotor1(val);
+    }
+    else if (strncmp(cmd, "m2:", 3) == 0)
+    {
+        int val = atoi(cmd + 3);
+        controller.setPowerMotor2(val);
+    }
     else
     {
         bool isNumeric = true;
